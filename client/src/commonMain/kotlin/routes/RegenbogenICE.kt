@@ -20,4 +20,11 @@ public class RegenbogenICE {
         val includeMarudorLink: Boolean? = null,
         val regenbogenICE: RegenbogenICE = RegenbogenICE(),
     )
+
+    @Serializable
+    @Resource("autocomplete/{searchTerm}")
+    public data class AutoComplete(
+        val searchTerm: String,
+        val regenbogenICE: RegenbogenICE = RegenbogenICE(),
+    )
 }

@@ -48,4 +48,9 @@ public class RegenbogenICEClient {
             else -> error("Unexpected response code: ${response.status}.")
         }
     }
+
+    public suspend fun autoComplete(
+        searchTerm: String,
+    ): List<String> =
+        client.get(RegenbogenICE.AutoComplete(searchTerm)).body()
 }
