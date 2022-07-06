@@ -14,8 +14,8 @@ import dev.nycode.regenbogenice.RegenbogenICEExtension
 import dev.nycode.regenbogenice.client.RegenbogenICEClient
 import dev.nycode.regenbogenice.client.Stop
 import dev.nycode.regenbogenice.client.TrainVehicle
-import dev.nycode.regenbogenice.client.Trip
 import dev.nycode.regenbogenice.train.TrainOverride
+import dev.nycode.regenbogenice.train.fetchCurrentTrip
 import dev.schlaubi.hafalsch.marudor.Marudor
 import dev.schlaubi.hafalsch.marudor.entity.JourneyInformation
 import dev.schlaubi.mikbot.plugin.api.util.discordError
@@ -23,10 +23,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
-import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import org.koin.core.component.inject
-import kotlin.time.Duration.Companion.minutes
 
 class CurrentLocationCommandArguments : Arguments(), KordExKoinComponent {
 
@@ -72,13 +70,8 @@ suspend fun RegenbogenICEExtension.currentRideCommand() =
 
         action {
             val scope = CoroutineScope(Dispatchers.IO)
-            val train = client.fetchTrainVehicle(
-                arguments.name, 20,
-                includeRoutes = true,
-                includeMarudorLink = true
-            )
-            val currentTrip =
-                train.trips?.findCurrentTripOrNull() ?: discordError("No trips could be found.")
+            val (train, currentTrip) = client.fetchCurrentTrip(arguments.name)
+                ?: discordError("There is no trip data available.")
             val stops = currentTrip.stops ?: discordError("The fetched trip has no routes.")
             val details = scope.async {
                 marudor.hafas.details("${currentTrip.trainType} ${currentTrip.trainNumber}")
@@ -130,19 +123,6 @@ suspend fun RegenbogenICEExtension.currentRideCommand() =
             }
         }
     }
-
-private fun Collection<Trip>.findCurrentTripOrNull(): Trip? {
-    return filterNot(Trip::isObsolete).minByOrNull { it.arrival!! }
-}
-
-private fun Trip.isObsolete(): Boolean {
-    return arrival?.plus(30.minutes)?.let {
-        it < Clock.System.now()
-    } ?: true
-}
-
-private val Trip.arrival: Instant?
-    get() = stops?.last()?.arrival
 
 private val TrainVehicle.displayName: String
     get() {
