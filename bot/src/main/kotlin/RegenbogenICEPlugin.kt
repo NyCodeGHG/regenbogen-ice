@@ -5,6 +5,8 @@ import com.kotlindiscord.kord.extensions.extensions.Extension
 import com.kotlindiscord.kord.extensions.utils.loadModule
 import dev.nycode.regenbogenice.client.RegenbogenICEClient
 import dev.nycode.regenbogenice.commands.currentRideCommand
+import dev.schlaubi.hafalsch.client.invoke
+import dev.schlaubi.hafalsch.marudor.Marudor
 import dev.schlaubi.mikbot.plugin.api.Plugin
 import dev.schlaubi.mikbot.plugin.api.PluginMain
 import dev.schlaubi.mikbot.plugin.api.PluginWrapper
@@ -13,12 +15,14 @@ import dev.schlaubi.mikbot.plugin.api.PluginWrapper
 class RegenbogenICEPlugin(wrapper: PluginWrapper) : Plugin(wrapper) {
 
     private val client = RegenbogenICEClient()
+    private val marudor = Marudor()
 
     override suspend fun ExtensibleBotBuilder.apply() {
         hooks {
             afterKoinSetup {
                 loadModule {
                     single { client }
+                    single { marudor }
                 }
             }
         }
