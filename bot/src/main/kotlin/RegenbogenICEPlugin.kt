@@ -4,7 +4,7 @@ import com.kotlindiscord.kord.extensions.builders.ExtensibleBotBuilder
 import com.kotlindiscord.kord.extensions.extensions.Extension
 import com.kotlindiscord.kord.extensions.utils.loadModule
 import dev.nycode.regenbogenice.client.RegenbogenICEClient
-import dev.nycode.regenbogenice.commands.currentLocationCommand
+import dev.nycode.regenbogenice.commands.currentRideCommand
 import dev.schlaubi.mikbot.plugin.api.Plugin
 import dev.schlaubi.mikbot.plugin.api.PluginMain
 import dev.schlaubi.mikbot.plugin.api.PluginWrapper
@@ -34,6 +34,6 @@ class RegenbogenICEExtension : Extension() {
     override val bundle: String = "regenbogen_ice"
 
     override suspend fun setup() {
-        currentLocationCommand()
+        currentRideCommand()
     }
 }

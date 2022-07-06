@@ -1,3 +1,7 @@
+import dev.schlaubi.mikbot.gradle.GenerateDefaultTranslationBundleTask
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import java.util.Locale
+
 plugins {
     kotlin("jvm") version "1.7.0"
     kotlin("plugin.serialization") version "1.7.0"
@@ -30,6 +34,15 @@ mikbotPlugin {
     license.set("MIT")
 }
 
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
-    kotlinOptions.jvmTarget = "18"
+tasks {
+    withType<KotlinCompile> {
+        kotlinOptions.jvmTarget = "18"
+    }
+    val generateDefaultResourceBundle = task<GenerateDefaultTranslationBundleTask>("generateDefaultResourceBundle") {
+        defaultLocale.set(Locale("en", "GB"))
+    }
+
+    assemblePlugin {
+        dependsOn(generateDefaultResourceBundle)
+    }
 }

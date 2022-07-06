@@ -23,7 +23,7 @@ class CurrentLocationCommandArguments : Arguments(), KordExKoinComponent {
 
     val name by defaultingString {
         name = "train"
-        description = "The train whose current position is to be displayed."
+        description = "The train whose current ride is to be displayed."
         defaultValue = "304"
         autoComplete {
             val trains = client.autoComplete(focusedOption.value)
@@ -36,10 +36,10 @@ class CurrentLocationCommandArguments : Arguments(), KordExKoinComponent {
     }
 }
 
-suspend fun RegenbogenICEExtension.currentLocationCommand() =
+suspend fun RegenbogenICEExtension.currentRideCommand() =
     publicSlashCommand(::CurrentLocationCommandArguments) {
-        name = "current-location"
-        description = "Shows the current location of the specified train."
+        name = "commands.current_ride.name"
+        description = "commands.current_ride.description"
 
         val client by inject<RegenbogenICEClient>()
 
@@ -54,7 +54,7 @@ suspend fun RegenbogenICEExtension.currentLocationCommand() =
             respond {
                 embed {
                     title = train.displayName
-                    field(translate("commands.current_location.train")) {
+                    field(translate("commands.current_ride.train")) {
                         if (currentTrip.marudor != null) {
                             "[${currentTrip.trainType} ${currentTrip.trainNumber}](${currentTrip.marudor})"
                         } else {
@@ -62,7 +62,7 @@ suspend fun RegenbogenICEExtension.currentLocationCommand() =
                         }
                     }
                     field {
-                        name = translate("commands.current_location.origin")
+                        name = translate("commands.current_ride.origin")
                         value = stops.first().station
                         inline = true
                     }
@@ -71,7 +71,7 @@ suspend fun RegenbogenICEExtension.currentLocationCommand() =
                         inline = true
                     }
                     field {
-                        name = translate("commands.current_location.destination")
+                        name = translate("commands.current_ride.destination")
                         value = stops.last().station
                         inline = true
                     }
@@ -79,12 +79,14 @@ suspend fun RegenbogenICEExtension.currentLocationCommand() =
                     val arrival = stops.last().arrival
                     if (departure != null && arrival != null) {
                         field {
-                            name = translate("commands.current_location.departure")
+                            name = translate("commands.current_ride.departure")
                             value = departure.toMessageFormat(DiscordTimestampStyle.ShortTime)
+                            inline = true
                         }
                         field {
-                            name = translate("commands.current_location.arrival")
+                            name = translate("commands.current_ride.arrival")
                             value = arrival.toMessageFormat(DiscordTimestampStyle.ShortTime)
+                            inline = true
                         }
                     }
                 }
