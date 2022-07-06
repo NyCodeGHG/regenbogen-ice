@@ -5,7 +5,7 @@ RUN gradle --no-daemon installBotArchive
 
 FROM eclipse-temurin:18-jre-alpine
 WORKDIR /usr/app
-COPY --from=builder /usr/app/build/installBot .
+COPY --from=builder /usr/app/bot/build/installBot .
 
 LABEL org.opencontainers.image.source = "https://github.com/mikbot/regenbogen-ice"
 
