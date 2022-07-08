@@ -51,6 +51,10 @@ public class RegenbogenICEClient {
 
     public suspend fun autoComplete(
         searchTerm: String,
-    ): List<String> =
-        client.get(RegenbogenICE.AutoComplete(searchTerm)).body()
+    ): List<String> {
+        if (searchTerm.isBlank()) {
+            return emptyList()
+        }
+        return client.get(RegenbogenICE.AutoComplete(searchTerm)).body()
+    }
 }

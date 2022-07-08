@@ -1,19 +1,18 @@
 package dev.nycode.regenbogenice.commands
 
 import com.kotlindiscord.kord.extensions.commands.Arguments
-import com.kotlindiscord.kord.extensions.commands.converters.impl.defaultingString
 import com.kotlindiscord.kord.extensions.extensions.publicSlashCommand
 import com.kotlindiscord.kord.extensions.koin.KordExKoinComponent
 import com.kotlindiscord.kord.extensions.types.respond
 import dev.kord.common.DiscordTimestampStyle
 import dev.kord.common.toMessageFormat
-import dev.kord.core.behavior.interaction.suggestString
 import dev.kord.rest.builder.message.create.embed
 import dev.kord.x.emoji.Emojis
 import dev.nycode.regenbogenice.RegenbogenICEExtension
 import dev.nycode.regenbogenice.client.RegenbogenICEClient
 import dev.nycode.regenbogenice.client.Stop
 import dev.nycode.regenbogenice.client.TrainVehicle
+import dev.nycode.regenbogenice.command.optionalTrain
 import dev.nycode.regenbogenice.train.TrainOverride
 import dev.nycode.regenbogenice.train.fetchCurrentTrip
 import dev.schlaubi.hafalsch.marudor.Marudor
@@ -27,21 +26,9 @@ import kotlinx.datetime.Instant
 import org.koin.core.component.inject
 
 class CurrentLocationCommandArguments : Arguments(), KordExKoinComponent {
-
-    private val client by inject<RegenbogenICEClient>()
-
-    val name by defaultingString {
+    val train by optionalTrain {
         name = "train"
         description = "The train whose current ride is to be displayed."
-        defaultValue = "304"
-        autoComplete {
-            val trains = client.autoComplete(focusedOption.value)
-            suggestString {
-                for (train in trains) {
-                    choice(train, train)
-                }
-            }
-        }
     }
 }
 
@@ -70,16 +57,21 @@ suspend fun RegenbogenICEExtension.currentRideCommand() =
 
         action {
             val scope = CoroutineScope(Dispatchers.IO)
-            val (train, currentTrip) = client.fetchCurrentTrip(arguments.name)
-                ?: discordError("There is no trip data available.")
-            val stops = currentTrip.stops ?: discordError("The fetched trip has no routes.")
+            val (train, currentTrip) = arguments.train ?: client.fetchCurrentTrip("304")
+            ?: discordError(translate("converter.train.no_trip_data"))
+            val stops =
+                currentTrip.stops ?: discordError(translate("command.current_ride.no_stops"))
             val details = scope.async {
                 marudor.hafas.details("${currentTrip.trainType} ${currentTrip.trainNumber}")
             }
             val originText =
                 scope.fetchMarudorUrlAsync(stops, details, 0)
-            val destinationText =
-                scope.fetchMarudorUrlAsync(stops, details, stops.lastIndex)
+            val destinationText = scope.fetchMarudorUrlAsync(
+                stops,
+                details,
+                stops.lastIndex
+            )
+
 
             respond {
                 embed {

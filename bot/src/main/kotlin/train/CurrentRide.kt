@@ -1,8 +1,8 @@
 package dev.nycode.regenbogenice.train
 
 import dev.nycode.regenbogenice.client.RegenbogenICEClient
-import dev.nycode.regenbogenice.client.TrainVehicle
 import dev.nycode.regenbogenice.client.Trip
+import dev.nycode.regenbogenice.command.TrainTripResult
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlin.time.Duration.Companion.minutes
@@ -15,9 +15,9 @@ suspend fun RegenbogenICEClient.fetchCurrentTrip(
     tripLimit: Int = 20,
     includeRoutes: Boolean = true,
     includeMarudorLink: Boolean = true,
-): Pair<TrainVehicle, Trip>? {
+): TrainTripResult? {
     val train = fetchTrainVehicle(query, tripLimit, includeRoutes, includeMarudorLink)
-    return train to (train.trips?.findCurrentTripOrNull() ?: return null)
+    return TrainTripResult(train, (train.trips?.findCurrentTripOrNull() ?: return null))
 }
 
 private fun Collection<Trip>.findCurrentTripOrNull(): Trip? {
