@@ -1,17 +1,20 @@
 package dev.nycode.regenbogenice.commands
 
 import com.kotlindiscord.kord.extensions.commands.Arguments
+import com.kotlindiscord.kord.extensions.commands.application.slash.PublicSlashCommandContext
 import com.kotlindiscord.kord.extensions.extensions.publicSlashCommand
 import com.kotlindiscord.kord.extensions.koin.KordExKoinComponent
-import com.kotlindiscord.kord.extensions.types.respond
 import dev.kord.common.DiscordTimestampStyle
 import dev.kord.common.toMessageFormat
-import dev.kord.rest.builder.message.create.embed
+import dev.kord.core.behavior.interaction.response.edit
+import dev.kord.rest.builder.message.modify.InteractionResponseModifyBuilder
+import dev.kord.rest.builder.message.modify.embed
 import dev.kord.x.emoji.Emojis
 import dev.nycode.regenbogenice.RegenbogenICEExtension
 import dev.nycode.regenbogenice.client.RegenbogenICEClient
 import dev.nycode.regenbogenice.client.Stop
 import dev.nycode.regenbogenice.client.TrainVehicle
+import dev.nycode.regenbogenice.client.Trip
 import dev.nycode.regenbogenice.command.optionalTrain
 import dev.nycode.regenbogenice.train.TrainOverride
 import dev.nycode.regenbogenice.train.fetchCurrentTrip
@@ -61,6 +64,15 @@ suspend fun RegenbogenICEExtension.currentRideCommand() =
             ?: discordError(translate("converter.train.no_trip_data"))
             val stops =
                 currentTrip.stops ?: discordError(translate("command.current_ride.no_stops"))
+            val response = interactionResponse.edit {
+                buildMessage(
+                    train,
+                    currentTrip,
+                    stops.first().station,
+                    stops.last().station,
+                    stops
+                )
+            }
             val details = scope.async {
                 marudor.hafas.details("${currentTrip.trainType} ${currentTrip.trainNumber}")
             }
@@ -71,50 +83,59 @@ suspend fun RegenbogenICEExtension.currentRideCommand() =
                 details,
                 stops.lastIndex
             )
-
-
-            respond {
-                embed {
-                    title = train.displayName
-                    field(translate("commands.current_ride.train")) {
-                        if (currentTrip.marudor != null) {
-                            "[${currentTrip.trainType} ${currentTrip.trainNumber}](${currentTrip.marudor})"
-                        } else {
-                            "${currentTrip.trainType} ${currentTrip.trainNumber}"
-                        }
-                    }
-                    field {
-                        name = translate("commands.current_ride.origin")
-                        value = originText.await()
-                        inline = true
-                    }
-                    field {
-                        value = Emojis.arrowRight.toString()
-                        inline = true
-                    }
-                    field {
-                        name = translate("commands.current_ride.destination")
-                        value = destinationText.await()
-                        inline = true
-                    }
-                    val departure = stops.first().formattedDeparture
-                    val arrival = stops.last().formattedArrival
-                    if (departure != null && arrival != null) {
-                        field {
-                            name = translate("commands.current_ride.departure")
-                            value = departure
-                            inline = true
-                        }
-                        field {
-                            name = translate("commands.current_ride.arrival")
-                            value = arrival
-                            inline = true
-                        }
-                    }
-                }
+            response.edit {
+                buildMessage(train, currentTrip, originText.await(), destinationText.await(), stops)
             }
         }
     }
+
+context (InteractionResponseModifyBuilder)
+        private suspend fun PublicSlashCommandContext<CurrentLocationCommandArguments>.buildMessage(
+    train: TrainVehicle,
+    currentTrip: Trip,
+    originText: String,
+    destinationText: String,
+    stops: List<Stop>,
+) {
+    embed {
+        title = train.displayName
+        field(translate("commands.current_ride.train")) {
+            if (currentTrip.marudor != null) {
+                "[${currentTrip.trainType} ${currentTrip.trainNumber}](${currentTrip.marudor})"
+            } else {
+                "${currentTrip.trainType} ${currentTrip.trainNumber}"
+            }
+        }
+        field {
+            name = translate("commands.current_ride.origin")
+            value = originText
+            inline = true
+        }
+        field {
+            value = Emojis.arrowRight.toString()
+            inline = true
+        }
+        field {
+            name = translate("commands.current_ride.destination")
+            value = destinationText
+            inline = true
+        }
+        val departure = stops.first().formattedDeparture
+        val arrival = stops.last().formattedArrival
+        if (departure != null && arrival != null) {
+            field {
+                name = translate("commands.current_ride.departure")
+                value = departure
+                inline = true
+            }
+            field {
+                name = translate("commands.current_ride.arrival")
+                value = arrival
+                inline = true
+            }
+        }
+    }
+}
 
 private val TrainVehicle.displayName: String
     get() {

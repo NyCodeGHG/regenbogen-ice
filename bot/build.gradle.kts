@@ -11,7 +11,7 @@ plugins {
 }
 
 group = "dev.nycode"
-version = "0.2.0"
+version = "0.3.0"
 
 repositories {
     mavenCentral()
@@ -54,5 +54,15 @@ idea {
         sourceDirs = sourceDirs + file("build/generated/ksp/main/kotlin") // or tasks["kspKotlin"].destination
         testSourceDirs = testSourceDirs + file("build/generated/ksp/test/kotlin")
         generatedSourceDirs = generatedSourceDirs + file("build/generated/ksp/main/kotlin") + file("build/generated/ksp/test/kotlin")
+    }
+}
+
+kotlin {
+    sourceSets {
+        all {
+            languageSettings {
+                enableLanguageFeature("ContextReceivers")
+            }
+        }
     }
 }
