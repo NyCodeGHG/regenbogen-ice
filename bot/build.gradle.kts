@@ -6,7 +6,7 @@ plugins {
     kotlin("jvm") version "1.7.10"
     kotlin("plugin.serialization") version "1.7.10"
     id("com.google.devtools.ksp") version "1.7.10-1.0.6"
-    id("dev.schlaubi.mikbot.gradle-plugin") version "2.4.1"
+    id("dev.schlaubi.mikbot.gradle-plugin") version "2.5.0"
     idea
 }
 
