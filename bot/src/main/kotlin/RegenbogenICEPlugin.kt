@@ -4,28 +4,29 @@ import com.kotlindiscord.kord.extensions.builders.ExtensibleBotBuilder
 import com.kotlindiscord.kord.extensions.extensions.Extension
 import com.kotlindiscord.kord.extensions.utils.loadModule
 import dev.kord.core.on
-import dev.nycode.regenbogenice.client.RegenbogenICEClient
 import dev.nycode.regenbogenice.commands.currentRideCommand
+import dev.nycode.regenbogenice.notification.notificationCommand
 import dev.nycode.regenbogenice.presence.RailTrackPresence
 import dev.schlaubi.hafalsch.client.invoke
 import dev.schlaubi.hafalsch.marudor.Marudor
+import dev.schlaubi.hafalsch.rainbow_ice.RainbowICE
 import dev.schlaubi.mikbot.plugin.api.Plugin
 import dev.schlaubi.mikbot.plugin.api.PluginMain
 import dev.schlaubi.mikbot.plugin.api.PluginWrapper
 import dev.schlaubi.mikbot.plugin.api.util.AllShardsReadyEvent
-import kotlinx.coroutines.*
+import kotlinx.coroutines.cancel
 
 @PluginMain
 class RegenbogenICEPlugin(wrapper: PluginWrapper) : Plugin(wrapper) {
 
-    private val client = RegenbogenICEClient()
+    private val rainbowICE = RainbowICE()
     private val marudor = Marudor()
 
     override suspend fun ExtensibleBotBuilder.apply() {
         hooks {
             afterKoinSetup {
                 loadModule {
-                    single { client }
+                    single { rainbowICE }
                     single { marudor }
                 }
             }
@@ -45,6 +46,7 @@ class RegenbogenICEExtension : Extension() {
 
     override suspend fun setup() {
         currentRideCommand()
+        notificationCommand()
         kord.on<AllShardsReadyEvent> {
             presence.start()
         }

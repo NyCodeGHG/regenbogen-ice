@@ -10,3 +10,4 @@ ktor-client-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json",
 ktor-client-resources = { module = "io.ktor:ktor-client-resources", version.ref = "ktor" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version = "0.4.0" }
 marudor = { module = "dev.schlaubi:marudor-client", version = "1.0-SNAPSHOT" }
+regenbogen-ice = { module = "dev.schlaubi:regenbogen-ice-client", version = "1.0-SNAPSHOT" }

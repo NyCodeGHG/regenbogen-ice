@@ -1,0 +1,12 @@
+# This is for a development environment.
+# Use our helm chart for a production deployment on Kubernetes.
+# -> https://github.com/mikbot/charts/tree/main/charts/regenbogen-ice
+version: '3'
+services:
+  mongo:
+    image: mongo
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
