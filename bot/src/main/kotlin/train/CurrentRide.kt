@@ -24,7 +24,7 @@ private fun Collection<TrainVehicle.Trip>.findCurrentTripOrNull(): TrainVehicle.
     return asSequence().filterNot(TrainVehicle.Trip::isObsolete).minByOrNull { it.arrival!! }
 }
 
-private fun TrainVehicle.Trip.isObsolete(): Boolean {
+internal fun TrainVehicle.Trip.isObsolete(): Boolean {
     return arrival?.plus(30.minutes)?.let {
         it < Clock.System.now()
     } ?: true
@@ -34,4 +34,4 @@ private fun TrainVehicle.Trip.isObsolete(): Boolean {
  * The arrival at the last stop of the trip.
  */
 val TrainVehicle.Trip.arrival: Instant?
-    get() = stops.last().arrival
+    get() = safeStops.last().arrival

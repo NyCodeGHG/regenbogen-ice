@@ -1,10 +1,8 @@
 import dev.schlaubi.mikbot.gradle.GenerateDefaultTranslationBundleTask
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import java.util.Locale
+import java.util.*
 
 plugins {
-    kotlin("jvm") version "1.7.10"
-    kotlin("plugin.serialization") version "1.7.10"
+    `regenbogen-ice-module`
     id("com.google.devtools.ksp") version "1.7.10-1.0.6"
     id("dev.schlaubi.mikbot.gradle-plugin") version "2.5.0"
     idea
@@ -14,7 +12,6 @@ group = "dev.nycode"
 version = "0.3.0"
 
 repositories {
-    mavenCentral()
     maven("https://oss.sonatype.org/content/repositories/snapshots")
 }
 
@@ -25,6 +22,7 @@ dependencies {
     ksp("com.kotlindiscord.kord.extensions", "annotation-processor", "1.5.5.2-MIKBOT-SNAPSHOT")
     implementation(libs.marudor)
     implementation(libs.regenbogen.ice)
+    implementation(projects.rwMutex)
 }
 
 mikbotPlugin {
@@ -36,13 +34,10 @@ mikbotPlugin {
 }
 
 tasks {
-    withType<KotlinCompile> {
-        kotlinOptions.jvmTarget = "18"
-    }
-    val generateDefaultResourceBundle = task<GenerateDefaultTranslationBundleTask>("generateDefaultResourceBundle") {
-        defaultLocale.set(Locale("en", "GB"))
-    }
-
+    val generateDefaultResourceBundle =
+        task<GenerateDefaultTranslationBundleTask>("generateDefaultResourceBundle") {
+            defaultLocale.set(Locale("en", "GB"))
+        }
     assemblePlugin {
         dependsOn(generateDefaultResourceBundle)
     }
@@ -51,9 +46,11 @@ tasks {
 idea {
     module {
         // Not using += due to https://github.com/gradle/gradle/issues/8749
-        sourceDirs = sourceDirs + file("build/generated/ksp/main/kotlin") // or tasks["kspKotlin"].destination
+        sourceDirs =
+            sourceDirs + file("build/generated/ksp/main/kotlin") // or tasks["kspKotlin"].destination
         testSourceDirs = testSourceDirs + file("build/generated/ksp/test/kotlin")
-        generatedSourceDirs = generatedSourceDirs + file("build/generated/ksp/main/kotlin") + file("build/generated/ksp/test/kotlin")
+        generatedSourceDirs =
+            generatedSourceDirs + file("build/generated/ksp/main/kotlin") + file("build/generated/ksp/test/kotlin")
     }
 }
 

@@ -1,5 +1,6 @@
 [versions]
 ktor = "2.0.3"
+coroutines = "1.6.4"
 
 [libraries]
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
@@ -11,3 +12,6 @@ ktor-client-resources = { module = "io.ktor:ktor-client-resources", version.ref 
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version = "0.4.0" }
 marudor = { module = "dev.schlaubi:marudor-client", version = "1.0-SNAPSHOT" }
 regenbogen-ice = { module = "dev.schlaubi:regenbogen-ice-client", version = "1.0-SNAPSHOT" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
+assertk = { module = "com.willowtreeapps.assertk:assertk-jvm", version = "0.25" }

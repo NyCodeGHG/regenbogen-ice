@@ -60,7 +60,7 @@ suspend fun RegenbogenICEExtension.currentRideCommand() =
             val (train, currentTrip) = arguments.train ?: fetchCurrentTrip("304")
             ?: discordError(translate("converter.train.no_trip_data"))
             val stops = /* just in case it's doch nullable */
-                currentTrip.stops // ?: discordError(translate("command.current_ride.no_stops"))
+                currentTrip.safeStops
             val response = interactionResponse.edit {
                 buildMessage(
                     train,
@@ -134,19 +134,19 @@ context (InteractionResponseModifyBuilder)
     }
 }
 
-private val TrainVehicle.displayName: String
+val TrainVehicle.displayName: String
     get() {
         val override = enumValues<TrainOverride>().find { it.number == number }
         return override?.formatEmbedTitle(this) ?: "${Emojis.bullettrainSide} $name"
     }
 
 private val RainbowStop.formattedDeparture: String?
-    get() = formattedTrainTime(departure, scheduledDeparture)
+    get() = formatTrainTime(departure, scheduledDeparture)
 
 private val RainbowStop.formattedArrival: String?
-    get() = formattedTrainTime(arrival, scheduledArrival)
+    get() = formatTrainTime(arrival, scheduledArrival)
 
-private fun formattedTrainTime(
+fun formatTrainTime(
     time: Instant?,
     scheduledTime: Instant?,
 ): String? {
