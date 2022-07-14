@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "dev.nycode"
-version = "0.3.0"
+version = "0.4.0"
 
 repositories {
     maven("https://oss.sonatype.org/content/repositories/snapshots")
