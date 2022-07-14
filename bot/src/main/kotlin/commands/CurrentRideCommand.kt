@@ -12,6 +12,7 @@ import dev.kord.rest.builder.message.modify.embed
 import dev.kord.x.emoji.Emojis
 import dev.nycode.regenbogenice.RegenbogenICEExtension
 import dev.nycode.regenbogenice.command.optionalTrainTrip
+import dev.nycode.regenbogenice.locale.updateLocaleAsync
 import dev.nycode.regenbogenice.train.TrainOverride
 import dev.nycode.regenbogenice.train.fetchCurrentTrip
 import dev.schlaubi.hafalsch.marudor.Marudor
@@ -56,6 +57,7 @@ suspend fun RegenbogenICEExtension.currentRideCommand() =
         }
 
         action {
+            updateLocaleAsync()
             val scope = CoroutineScope(Dispatchers.IO)
             val (train, currentTrip) = arguments.train ?: fetchCurrentTrip("304")
             ?: discordError(translate("converter.train.no_trip_data"))

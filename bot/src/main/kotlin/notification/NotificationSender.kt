@@ -9,9 +9,11 @@ import dev.kord.rest.builder.message.EmbedBuilder
 import dev.kord.x.emoji.Emojis
 import dev.nycode.regenbogenice.commands.displayName
 import dev.nycode.regenbogenice.commands.formatTrainTime
+import dev.nycode.regenbogenice.locale.userLocaleCollection
 import dev.nycode.regenbogenice.train.isObsolete
 import dev.nycode.regenbogenice.util.isFuture
 import dev.schlaubi.hafalsch.rainbow_ice.entity.TrainVehicle
+import dev.schlaubi.mikbot.plugin.api.pluginSystem
 import dev.schlaubi.mikbot.plugin.api.util.embed
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
@@ -68,7 +70,12 @@ suspend fun buildNotificationMessage(
     }
     return userNotification.groupBy(UserNotification::train).map { (train, trainNotifications) ->
         embed {
-            title = "Der ${train.displayName} ist bald in deiner Nähe!"
+            title = pluginSystem.translate(
+                "notification.train_near_you",
+                "regenbogen_ice",
+                userLocaleCollection.findOneById(userId)?.locale,
+                arrayOf(train.displayName)
+            )
             description = buildString {
                 for ((trip, tripNotifications) in trainNotifications.groupBy { it.trip }) {
                     val nextStop = trip.safeStops

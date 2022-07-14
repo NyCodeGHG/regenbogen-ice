@@ -10,6 +10,7 @@ import dev.kord.rest.builder.message.create.embed
 import dev.kord.x.emoji.Emojis
 import dev.nycode.regenbogenice.command.optionalTrain
 import dev.nycode.regenbogenice.command.station
+import dev.nycode.regenbogenice.locale.updateLocaleAsync
 import dev.schlaubi.hafalsch.rainbow_ice.RainbowICE
 import dev.schlaubi.mikbot.plugin.api.util.discordError
 import org.koin.core.component.inject
@@ -36,6 +37,7 @@ internal suspend fun EphemeralSlashCommand<*>.addCommand(
         val rainbow by inject<RainbowICE>()
 
         action {
+            updateLocaleAsync()
             val train =
                 (arguments.train ?: rainbow.fetchTrain("304")) ?: discordError(
                     translate(

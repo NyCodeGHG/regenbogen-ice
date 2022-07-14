@@ -10,6 +10,7 @@ import dev.kord.core.behavior.interaction.suggestString
 import dev.kord.rest.builder.message.create.embed
 import dev.kord.x.emoji.Emojis
 import dev.nycode.regenbogenice.command.*
+import dev.nycode.regenbogenice.locale.updateLocaleAsync
 import dev.schlaubi.hafalsch.rainbow_ice.RainbowICE
 import dev.schlaubi.stdx.coroutines.parallelMapNotNull
 import kotlinx.coroutines.flow.filter
@@ -64,6 +65,7 @@ internal suspend fun EphemeralSlashCommand<*>.removeCommand(
         description = "commands.notification.remove.description"
 
         action {
+            updateLocaleAsync()
             val train = arguments.train
             val notification =
                 collection.findNotification(user.id, train.number, arguments.station.evaNumber)
