@@ -11,15 +11,13 @@ import dev.kord.rest.builder.message.modify.InteractionResponseModifyBuilder
 import dev.kord.rest.builder.message.modify.embed
 import dev.kord.x.emoji.Emojis
 import dev.nycode.regenbogenice.RegenbogenICEExtension
-import dev.nycode.regenbogenice.client.RegenbogenICEClient
-import dev.nycode.regenbogenice.client.Stop
-import dev.nycode.regenbogenice.client.TrainVehicle
-import dev.nycode.regenbogenice.client.Trip
-import dev.nycode.regenbogenice.command.optionalTrain
+import dev.nycode.regenbogenice.command.optionalTrainTrip
+import dev.nycode.regenbogenice.locale.updateLocaleAsync
 import dev.nycode.regenbogenice.train.TrainOverride
 import dev.nycode.regenbogenice.train.fetchCurrentTrip
 import dev.schlaubi.hafalsch.marudor.Marudor
 import dev.schlaubi.hafalsch.marudor.entity.JourneyInformation
+import dev.schlaubi.hafalsch.rainbow_ice.entity.TrainVehicle
 import dev.schlaubi.mikbot.plugin.api.util.discordError
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
@@ -27,11 +25,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.datetime.Instant
 import org.koin.core.component.inject
+import dev.schlaubi.hafalsch.rainbow_ice.entity.TrainVehicle.Trip.Stop as RainbowStop
 
 class CurrentLocationCommandArguments : Arguments(), KordExKoinComponent {
-    val train by optionalTrain {
-        name = "train"
-        description = "The train whose current ride is to be displayed."
+    val train by optionalTrainTrip {
+        name = "commands.current_ride.argument.train.name"
+        description = "commands.current_ride.argument.train.description"
     }
 }
 
@@ -40,11 +39,10 @@ suspend fun RegenbogenICEExtension.currentRideCommand() =
         name = "commands.current_ride.name"
         description = "commands.current_ride.description"
 
-        val client by inject<RegenbogenICEClient>()
         val marudor by inject<Marudor>()
 
         fun CoroutineScope.fetchMarudorUrlAsync(
-            stops: List<Stop>,
+            stops: List<RainbowStop>,
             detailsDeferred: Deferred<JourneyInformation?>,
             index: Int,
         ) = async {
@@ -59,11 +57,12 @@ suspend fun RegenbogenICEExtension.currentRideCommand() =
         }
 
         action {
+            updateLocaleAsync()
             val scope = CoroutineScope(Dispatchers.IO)
-            val (train, currentTrip) = arguments.train ?: client.fetchCurrentTrip("304")
+            val (train, currentTrip) = arguments.train ?: fetchCurrentTrip("304")
             ?: discordError(translate("converter.train.no_trip_data"))
-            val stops =
-                currentTrip.stops ?: discordError(translate("command.current_ride.no_stops"))
+            val stops = /* just in case it's doch nullable */
+                currentTrip.safeStops
             val response = interactionResponse.edit {
                 buildMessage(
                     train,
@@ -92,10 +91,10 @@ suspend fun RegenbogenICEExtension.currentRideCommand() =
 context (InteractionResponseModifyBuilder)
         private suspend fun PublicSlashCommandContext<CurrentLocationCommandArguments>.buildMessage(
     train: TrainVehicle,
-    currentTrip: Trip,
+    currentTrip: TrainVehicle.Trip,
     originText: String,
     destinationText: String,
-    stops: List<Stop>,
+    stops: List<RainbowStop>,
 ) {
     embed {
         title = train.displayName
@@ -137,19 +136,19 @@ context (InteractionResponseModifyBuilder)
     }
 }
 
-private val TrainVehicle.displayName: String
+val TrainVehicle.displayName: String
     get() {
         val override = enumValues<TrainOverride>().find { it.number == number }
         return override?.formatEmbedTitle(this) ?: "${Emojis.bullettrainSide} $name"
     }
 
-private val Stop.formattedDeparture: String?
-    get() = formattedTrainTime(departure, scheduledDeparture)
+private val RainbowStop.formattedDeparture: String?
+    get() = formatTrainTime(departure, scheduledDeparture)
 
-private val Stop.formattedArrival: String?
-    get() = formattedTrainTime(arrival, scheduledArrival)
+private val RainbowStop.formattedArrival: String?
+    get() = formatTrainTime(arrival, scheduledArrival)
 
-private fun formattedTrainTime(
+fun formatTrainTime(
     time: Instant?,
     scheduledTime: Instant?,
 ): String? {

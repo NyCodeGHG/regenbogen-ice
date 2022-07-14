@@ -2,7 +2,7 @@ package dev.nycode.regenbogenice.train
 
 import dev.kord.x.emoji.DiscordEmoji
 import dev.kord.x.emoji.Emojis
-import dev.nycode.regenbogenice.client.TrainVehicle
+import dev.schlaubi.hafalsch.rainbow_ice.entity.TrainVehicle
 
 enum class TrainOverride(val number: Int, val displayName: String?, val emoji: String) {
     RAINBOW_ICE(304, "Regenbogen ICE", Emojis.rainbow),

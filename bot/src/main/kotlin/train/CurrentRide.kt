@@ -1,8 +1,8 @@
 package dev.nycode.regenbogenice.train
 
-import dev.nycode.regenbogenice.client.RegenbogenICEClient
-import dev.nycode.regenbogenice.client.Trip
 import dev.nycode.regenbogenice.command.TrainTripResult
+import dev.nycode.regenbogenice.command.fetchTrain
+import dev.schlaubi.hafalsch.rainbow_ice.entity.TrainVehicle
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlin.time.Duration.Companion.minutes
@@ -10,21 +10,21 @@ import kotlin.time.Duration.Companion.minutes
 /**
  * Fetches the current trip information and prepares it for easier usage.
  */
-suspend fun RegenbogenICEClient.fetchCurrentTrip(
+suspend fun fetchCurrentTrip(
     query: String,
     tripLimit: Int = 20,
     includeRoutes: Boolean = true,
     includeMarudorLink: Boolean = true,
 ): TrainTripResult? {
-    val train = fetchTrainVehicle(query, tripLimit, includeRoutes, includeMarudorLink)
+    val train = fetchTrain(query, tripLimit, includeRoutes, includeMarudorLink) ?: return null
     return TrainTripResult(train, (train.trips?.findCurrentTripOrNull() ?: return null))
 }
 
-private fun Collection<Trip>.findCurrentTripOrNull(): Trip? {
-    return asSequence().filterNot(Trip::isObsolete).minByOrNull { it.arrival!! }
+private fun Collection<TrainVehicle.Trip>.findCurrentTripOrNull(): TrainVehicle.Trip? {
+    return asSequence().filterNot(TrainVehicle.Trip::isObsolete).minByOrNull { it.arrival!! }
 }
 
-private fun Trip.isObsolete(): Boolean {
+internal fun TrainVehicle.Trip.isObsolete(): Boolean {
     return arrival?.plus(30.minutes)?.let {
         it < Clock.System.now()
     } ?: true
@@ -33,5 +33,5 @@ private fun Trip.isObsolete(): Boolean {
 /**
  * The arrival at the last stop of the trip.
  */
-val Trip.arrival: Instant?
-    get() = stops?.last()?.arrival
+val TrainVehicle.Trip.arrival: Instant?
+    get() = safeStops.last().arrival
