@@ -12,11 +12,11 @@ import dev.nycode.regenbogenice.commands.formatTrainTime
 import dev.nycode.regenbogenice.locale.userLocaleCollection
 import dev.nycode.regenbogenice.train.isObsolete
 import dev.nycode.regenbogenice.util.isFuture
+import dev.nycode.regenbogenice.util.isPast
 import dev.schlaubi.hafalsch.rainbow_ice.entity.TrainVehicle
 import dev.schlaubi.mikbot.plugin.api.pluginSystem
 import dev.schlaubi.mikbot.plugin.api.util.embed
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
+import kotlinx.datetime.*
 
 suspend fun checkNotification(allNotifications: List<Notification>): Map<Snowflake, List<UserNotification>> {
     val cache = NotificationCache()
@@ -77,49 +77,54 @@ suspend fun buildNotificationMessage(
                 arrayOf(train.displayName)
             )
             description = buildString {
-                for ((trip, tripNotifications) in trainNotifications.groupBy { it.trip }) {
-                    val nextStop = trip.safeStops
-                        .asSequence()
-                        .filter { it.actualTime.isFuture }
-                        .minBy { it.actualTime }
-                    append(
-                        tripNotifications.first().actualTime.toMessageFormat(
-                            DiscordTimestampStyle.LongDate
-                        )
-                    )
-                    appendLine()
-                    appendLine()
-                    append(trip.linkedDisplayName)
-                    appendLine()
-                    for (tripNotification in tripNotifications.sortedBy { it.plannedTime }) {
-                        if (nextStop.station == tripNotification.station) {
-                            append(Emojis.blueCircle)
-                        } else {
-                            append(Emojis.redCircle)
-                        }
-                        append(" - ")
+                trainNotifications.groupBy { it.trip }.toList()
+                    .groupBy { it.first.safeStops.first().plannedTime.toLocalDateTime(TimeZone.UTC).date }
+                    .forEach { (date, tripData) ->
                         append(
-                            formatTrainTime(
-                                tripNotification.actualTime,
-                                tripNotification.plannedTime
+                            date.atStartOfDayIn(TimeZone.UTC).toMessageFormat(
+                                DiscordTimestampStyle.LongDate
                             )
                         )
-                        append(" **")
-                        append(tripNotification.station.strikethroughIf { tripNotification.actualTime < Clock.System.now() })
-                        append("** ")
                         appendLine()
+                        for ((trip, tripNotifications) in tripData.sortedBy { it.first.safeStops.first().actualTime }) {
+                            appendLine()
+                            val nextStop = trip.nextStation
+                            append(trip.linkedDisplayName)
+                            append(' ')
+                            append(Emojis.pushpin)
+                            append(' ')
+                            append(trip.safeStops.last().station)
+                            appendLine()
+                            for (tripNotification in tripNotifications.sortedBy { it.plannedTime }) {
+                                if (nextStop?.station == tripNotification.station) {
+                                    append(Emojis.blueCircle)
+                                } else {
+                                    append(Emojis.redCircle)
+                                }
+                                append(" - ")
+                                append(
+                                    formatTrainTime(
+                                        tripNotification.actualTime,
+                                        tripNotification.plannedTime
+                                    )
+                                )
+                                append(" **")
+                                append(tripNotification.station.strikethroughIf { tripNotification.actualTime.isPast })
+                                append("** ")
+                                appendLine()
+                            }
+                            if (trip.isActive && tripNotifications.none { it.station == nextStop?.station }) {
+                                appendLine()
+                                append("Nächster Halt: ")
+                                append(formatTrainTime(nextStop?.actualTime, nextStop?.plannedTime))
+                                appendLine()
+                                append("**")
+                                append(nextStop?.station)
+                                append("**")
+                                appendLine()
+                            }
+                        }
                     }
-                    if (tripNotifications.none { it.station == nextStop.station }) {
-                        appendLine()
-                        append("Nächster Halt: ")
-                        append(formatTrainTime(nextStop.arrival, nextStop.scheduledArrival))
-                        appendLine()
-                        append("**")
-                        append(nextStop.station)
-                        append("**")
-                        appendLine()
-                    }
-                }
             }
         }
     }
@@ -160,6 +165,17 @@ class UserNotification(
 
 private val TrainVehicle.currentTrips
     get() = safeTrips.filterNot(TrainVehicle.Trip::isObsolete)
+
+private val TrainVehicle.Trip.isActive
+    get() = safeStops.first().plannedTime.isPast && safeStops.last().plannedTime.isFuture
+
+private val TrainVehicle.Trip.nextStation: TrainVehicle.Trip.Stop?
+    get() = if (isActive) {
+        safeStops
+            .asSequence()
+            .filter { it.actualTime.isFuture }
+            .minBy { it.actualTime }
+    } else null
 
 private fun TrainVehicle.Trip.stopsAt(station: String) = safeStops.any { it.station == station }
 
