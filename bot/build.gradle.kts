@@ -12,7 +12,9 @@ group = "dev.nycode"
 version = "0.4.2"
 
 repositories {
+    mavenCentral()
     maven("https://oss.sonatype.org/content/repositories/snapshots")
+    maven("https://schlaubi.jfrog.io/artifactory/mikbot/")
 }
 
 dependencies {
