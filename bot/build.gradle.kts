@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "dev.nycode"
-version = "0.4.1"
+version = "0.4.2"
 
 repositories {
     maven("https://oss.sonatype.org/content/repositories/snapshots")
@@ -40,6 +40,9 @@ tasks {
         }
     assemblePlugin {
         dependsOn(generateDefaultResourceBundle)
+    }
+    assembleBot {
+        bundledPlugins.set(listOf("health@1.0.0"))
     }
 }
 
