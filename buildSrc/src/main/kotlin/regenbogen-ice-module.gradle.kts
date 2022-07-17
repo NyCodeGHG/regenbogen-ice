@@ -21,3 +21,9 @@ tasks {
         useJUnitPlatform()
     }
 }
+
+kotlin {
+    jvmToolchain {
+        languageVersion.set(JavaLanguageVersion.of(18))
+    }
+}
