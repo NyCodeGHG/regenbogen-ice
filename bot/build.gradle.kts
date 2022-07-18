@@ -19,7 +19,7 @@ repositories {
 
 dependencies {
     compileOnly(kotlin("stdlib-jdk8"))
-    mikbot("dev.schlaubi", "mikbot-api", "3.6.0-SNAPSHOT")
+    mikbot("dev.schlaubi", "mikbot-api", "3.7.0-SNAPSHOT")
     ksp("dev.schlaubi", "mikbot-plugin-processor", "2.2.0")
     ksp("com.kotlindiscord.kord.extensions", "annotation-processor", "1.5.5.2-MIKBOT-SNAPSHOT")
     implementation(libs.marudor)
