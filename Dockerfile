@@ -1,4 +1,4 @@
-FROM gradle:7.5-jdk-alpine as builder
+FROM gradle:7.5-jdk18-alpine as builder
 WORKDIR /usr/app
 COPY . .
 RUN gradle --no-daemon installBotArchive
