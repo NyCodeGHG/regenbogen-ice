@@ -4,7 +4,11 @@ import com.kotlindiscord.kord.extensions.koin.KordExKoinComponent
 import dev.kord.core.Kord
 import dev.kord.core.behavior.channel.createMessage
 import dev.kord.core.behavior.edit
-import dev.nycode.regenbogenice.notification.*
+import dev.nycode.regenbogenice.notification.SentNotification
+import dev.nycode.regenbogenice.notification.buildNotificationMessage
+import dev.nycode.regenbogenice.notification.checkNotification
+import dev.nycode.regenbogenice.notification.notificationCollection
+import dev.nycode.regenbogenice.sentry.sentryTransaction
 import dev.nycode.regenbogenice.train.fetchCurrentTrip
 import dev.schlaubi.hafalsch.rainbow_ice.entity.TrainVehicle
 import dev.schlaubi.mikbot.plugin.api.io.getCollection
@@ -13,7 +17,10 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.koin.core.component.inject
-import org.litote.kmongo.*
+import org.litote.kmongo.and
+import org.litote.kmongo.eq
+import org.litote.kmongo.`in`
+import org.litote.kmongo.newId
 import kotlin.coroutines.CoroutineContext
 import kotlin.time.Duration.Companion.seconds
 
@@ -42,39 +49,44 @@ class RailTrackPresence : CoroutineScope, KordExKoinComponent {
     }
 
     private val sentNotifications = database.getCollection<SentNotification>("sent_notifications")
-    private suspend fun checkNotifications() {
-        val allNotifications = checkNotification(notificationCollection.find().toList())
-        for ((user, notifications) in allNotifications) {
-            val embeds = buildNotificationMessage(user, notifications) ?: continue
-            val tripIds = notifications.map { it.trip.uniqueId }
-            val existingNotification =
-                sentNotifications.findOne(
-                    and(
-                        SentNotification::user eq user,
-                        SentNotification::tripIds `in` tripIds
-                    )
-                )
-            val channel = kord.getUser(user)?.getDmChannelOrNull() ?: return
-            if (existingNotification != null) {
-                channel.getMessageOrNull(existingNotification.messageId)?.edit {
-                    this.embeds = embeds.toMutableList()
+    private suspend fun checkNotifications() =
+        sentryTransaction("checkNotifications()", "notifications") {
+            val allNotifications = childTransaction("notifications", "Resolve notifications") {
+                checkNotification(notificationCollection.find().toList())
+            }
+            allNotifications.forEach { (user, notifications) ->
+                childTransaction("notifications", "Resolve notification for user") {
+                    val embeds = buildNotificationMessage(user, notifications) ?: return@forEach
+                    val tripIds = notifications.map { it.trip.uniqueId }
+                    val existingNotification =
+                        sentNotifications.findOne(
+                            and(
+                                SentNotification::user eq user,
+                                SentNotification::tripIds `in` tripIds
+                            )
+                        )
+                    val channel = kord.getUser(user)?.getDmChannelOrNull() ?: return
+                    if (existingNotification != null) {
+                        channel.getMessageOrNull(existingNotification.messageId)?.edit {
+                            this.embeds = embeds.toMutableList()
+                        }
+                    } else {
+                        val message = channel.createMessage {
+                            this.embeds.addAll(embeds)
+                        }
+                        sentNotifications.save(
+                            SentNotification(
+                                newId(),
+                                user,
+                                tripIds,
+                                message.id,
+                                message.channelId
+                            )
+                        )
+                    }
                 }
-            } else {
-                val message = channel.createMessage {
-                    this.embeds.addAll(embeds)
-                }
-                sentNotifications.save(
-                    SentNotification(
-                        newId(),
-                        user,
-                        tripIds,
-                        message.id,
-                        message.channelId
-                    )
-                )
             }
         }
-    }
 }
 
 private val TrainVehicle.Trip.uniqueId: String
