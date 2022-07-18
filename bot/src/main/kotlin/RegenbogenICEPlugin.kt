@@ -15,12 +15,14 @@ import dev.schlaubi.mikbot.plugin.api.PluginMain
 import dev.schlaubi.mikbot.plugin.api.PluginWrapper
 import dev.schlaubi.mikbot.plugin.api.util.AllShardsReadyEvent
 import kotlinx.coroutines.cancel
+import org.koin.core.component.inject
 
 @PluginMain
 class RegenbogenICEPlugin(wrapper: PluginWrapper) : Plugin(wrapper) {
 
     private val rainbowICE = RainbowICE()
     private val marudor = Marudor()
+    private val presence: RailTrackPresence = RailTrackPresence()
 
     override suspend fun ExtensibleBotBuilder.apply() {
         hooks {
@@ -28,6 +30,7 @@ class RegenbogenICEPlugin(wrapper: PluginWrapper) : Plugin(wrapper) {
                 loadModule {
                     single { rainbowICE }
                     single { marudor }
+                    single { presence }
                 }
             }
         }
@@ -41,8 +44,7 @@ class RegenbogenICEPlugin(wrapper: PluginWrapper) : Plugin(wrapper) {
 class RegenbogenICEExtension : Extension() {
     override val name: String = "Regenbogen ICE"
     override val bundle: String = "regenbogen_ice"
-
-    private val presence: RailTrackPresence = RailTrackPresence()
+    private val presence by inject<RailTrackPresence>()
 
     override suspend fun setup() {
         currentRideCommand()
