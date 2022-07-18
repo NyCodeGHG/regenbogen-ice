@@ -25,6 +25,7 @@ dependencies {
     implementation(libs.marudor)
     implementation(libs.regenbogen.ice)
     implementation(projects.rwMutex)
+    plugin("dev.schlaubi", "mikbot-health", "1.0.0")
 }
 
 mikbotPlugin {
