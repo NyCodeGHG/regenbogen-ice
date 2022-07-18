@@ -19,6 +19,10 @@ import dev.schlaubi.hafalsch.marudor.Marudor
 import dev.schlaubi.hafalsch.marudor.entity.JourneyInformation
 import dev.schlaubi.hafalsch.rainbow_ice.entity.TrainVehicle
 import dev.schlaubi.mikbot.plugin.api.util.discordError
+import io.ktor.client.*
+import io.ktor.client.engine.okhttp.*
+import io.ktor.client.request.*
+import io.ktor.http.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
@@ -40,6 +44,9 @@ suspend fun RegenbogenICEExtension.currentRideCommand() =
         description = "commands.current_ride.description"
 
         val marudor by inject<Marudor>()
+        val client = HttpClient(OkHttp) {
+            followRedirects = false
+        }
 
         fun CoroutineScope.fetchMarudorUrlAsync(
             stops: List<RainbowStop>,
@@ -50,10 +57,14 @@ suspend fun RegenbogenICEExtension.currentRideCommand() =
             val details = detailsDeferred.await() ?: return@async defaultText
             val id = details.stops[index].station.id
 
-            val url = marudor.hafas.detailsRedirect(details.journeyId) {
-                parameters.append("stopEva", id)
+            val url = marudor.hafas.detailsRedirect(details.journeyId)
+            val response = client.get(url)
+            val marudorUrl = marudor.buildUrl {
+                takeFrom(response.headers[HttpHeaders.Location]!!)
+                pathSegments = encodedPathSegments // small hack to encode path
+                parameters.append("stop", id)
             }
-            "[$defaultText]($url)"
+            "[$defaultText]($marudorUrl)"
         }
 
         action {
