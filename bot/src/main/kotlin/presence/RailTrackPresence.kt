@@ -13,6 +13,7 @@ import dev.nycode.regenbogenice.train.fetchCurrentTrip
 import dev.schlaubi.hafalsch.rainbow_ice.entity.TrainVehicle
 import dev.schlaubi.mikbot.plugin.api.io.getCollection
 import dev.schlaubi.mikbot.plugin.api.util.database
+import dev.schlaubi.mikbot.plugin.api.io.Database
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -26,10 +27,9 @@ import kotlin.time.Duration.Companion.seconds
 
 private const val REGENBOGEN_ICE_TZN = "304"
 
-class RailTrackPresence : CoroutineScope, KordExKoinComponent {
+class RailTrackPresence(private val kord: Kord, private val database: Database) : CoroutineScope {
     override val coroutineContext: CoroutineContext = Dispatchers.IO + SupervisorJob()
 
-    private val kord by inject<Kord>()
     private val isRunning = Mutex()
 
     fun start() = launch {

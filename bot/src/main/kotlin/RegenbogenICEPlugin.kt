@@ -22,7 +22,6 @@ class RegenbogenICEPlugin(wrapper: PluginWrapper) : Plugin(wrapper) {
 
     private val rainbowICE = RainbowICE()
     private val marudor = Marudor()
-    private val presence: RailTrackPresence = RailTrackPresence()
 
     override suspend fun ExtensibleBotBuilder.apply() {
         hooks {
@@ -30,7 +29,7 @@ class RegenbogenICEPlugin(wrapper: PluginWrapper) : Plugin(wrapper) {
                 loadModule {
                     single { rainbowICE }
                     single { marudor }
-                    single { presence }
+                    single { RailTrackPresence(get(), get()) }
                 }
             }
         }
