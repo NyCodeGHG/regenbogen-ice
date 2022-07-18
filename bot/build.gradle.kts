@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "dev.nycode"
-version = "0.4.3"
+version = "0.4.4"
 
 repositories {
     mavenCentral()
@@ -45,7 +45,7 @@ tasks {
         dependsOn(generateDefaultResourceBundle)
     }
     assembleBot {
-        bundledPlugins.set(listOf("health@1.0.0"))
+        bundledPlugins.set(listOf("health@1.0.0", "ktor@2.3.0"))
     }
 }
 
