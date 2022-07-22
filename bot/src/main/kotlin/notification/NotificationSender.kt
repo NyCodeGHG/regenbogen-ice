@@ -62,13 +62,15 @@ private val kord by KordExContext.get().inject<Kord>()
 suspend fun buildNotificationMessage(
     userId: Snowflake,
     userNotification: List<UserNotification>
-): List<EmbedBuilder>? {
+): Pair<List<LocalDate>, List<EmbedBuilder>>? {
     val user = kord.getUser(userId) ?: return null
     user.getDmChannelOrNull() ?: return null
     if (userNotification.isEmpty()) {
         return null
     }
-    return userNotification.groupBy(UserNotification::train).map { (train, trainNotifications) ->
+    return userNotification.map { it.trip.firstStopDate }.distinct() to userNotification.groupBy(
+        UserNotification::train
+    ).map { (train, trainNotifications) ->
         embed {
             title = pluginSystem.translate(
                 "notification.train_near_you",
@@ -78,7 +80,7 @@ suspend fun buildNotificationMessage(
             )
             description = buildString {
                 trainNotifications.groupBy { it.trip }.toList()
-                    .groupBy { it.first.safeStops.first().plannedTime.toLocalDateTime(TimeZone.UTC).date }
+                    .groupBy { it.first.firstStopDate }
                     .forEach { (date, tripData) ->
                         append(
                             date.atStartOfDayIn(TimeZone.UTC).toMessageFormat(
@@ -129,6 +131,9 @@ suspend fun buildNotificationMessage(
         }
     }
 }
+
+private val TrainVehicle.Trip.firstStopDate: LocalDate
+    get() = safeStops.first().plannedTime.toLocalDateTime(TimeZone.UTC).date
 
 inline fun String.strikethroughIf(condition: () -> Boolean): String {
     return if (condition()) {

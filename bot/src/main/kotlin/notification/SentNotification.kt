@@ -1,6 +1,7 @@
 package dev.nycode.regenbogenice.notification
 
 import dev.kord.common.entity.Snowflake
+import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -12,7 +13,7 @@ data class SentNotification(
     @Contextual
     val id: Id<SentNotification>,
     val user: Snowflake,
-    val tripIds: List<String>,
     val messageId: Snowflake,
-    val channelId: Snowflake
+    val channelId: Snowflake,
+    val days: List<LocalDate>,
 )

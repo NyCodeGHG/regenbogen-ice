@@ -1,6 +1,5 @@
 package dev.nycode.regenbogenice.presence
 
-import com.kotlindiscord.kord.extensions.koin.KordExKoinComponent
 import dev.kord.core.Kord
 import dev.kord.core.behavior.channel.createMessage
 import dev.kord.core.behavior.edit
@@ -11,13 +10,11 @@ import dev.nycode.regenbogenice.notification.notificationCollection
 import dev.nycode.regenbogenice.sentry.sentryTransaction
 import dev.nycode.regenbogenice.train.fetchCurrentTrip
 import dev.schlaubi.hafalsch.rainbow_ice.entity.TrainVehicle
-import dev.schlaubi.mikbot.plugin.api.io.getCollection
-import dev.schlaubi.mikbot.plugin.api.util.database
 import dev.schlaubi.mikbot.plugin.api.io.Database
+import dev.schlaubi.mikbot.plugin.api.io.getCollection
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import org.koin.core.component.inject
 import org.litote.kmongo.and
 import org.litote.kmongo.eq
 import org.litote.kmongo.`in`
@@ -56,13 +53,13 @@ class RailTrackPresence(private val kord: Kord, private val database: Database) 
             }
             allNotifications.forEach { (user, notifications) ->
                 childTransaction("notifications", "Resolve notification for user") {
-                    val embeds = buildNotificationMessage(user, notifications) ?: return@forEach
-                    val tripIds = notifications.map { it.trip.uniqueId }
+                    val (days, embeds) = buildNotificationMessage(user, notifications)
+                        ?: return@forEach
                     val existingNotification =
                         sentNotifications.findOne(
                             and(
                                 SentNotification::user eq user,
-                                SentNotification::tripIds `in` tripIds
+                                SentNotification::days `in` days,
                             )
                         )
                     val channel = kord.getUser(user)?.getDmChannelOrNull() ?: return
@@ -78,9 +75,9 @@ class RailTrackPresence(private val kord: Kord, private val database: Database) 
                             SentNotification(
                                 newId(),
                                 user,
-                                tripIds,
                                 message.id,
-                                message.channelId
+                                message.channelId,
+                                days
                             )
                         )
                     }
@@ -88,9 +85,6 @@ class RailTrackPresence(private val kord: Kord, private val database: Database) 
             }
         }
 }
-
-private val TrainVehicle.Trip.uniqueId: String
-    get() = "$displayName $tripTimestamp"
 
 private val TrainVehicle.Trip.displayName: String
     get() = "$trainType $trainNumber"
