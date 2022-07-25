@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "dev.nycode"
-version = "0.5.0"
+version = "0.5.1"
 
 repositories {
     mavenCentral()
@@ -46,6 +46,9 @@ tasks {
     }
     assembleBot {
         bundledPlugins.set(listOf("health@1.0.0", "ktor@2.3.0"))
+    }
+    runBot {
+        environment["DOWNLOAD_PLUGINS"] = "health@1.0.0,ktor@2.3.0"
     }
 }
 

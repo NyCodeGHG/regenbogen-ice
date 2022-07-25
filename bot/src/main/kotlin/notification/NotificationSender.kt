@@ -17,6 +17,7 @@ import dev.schlaubi.hafalsch.rainbow_ice.entity.TrainVehicle
 import dev.schlaubi.mikbot.plugin.api.pluginSystem
 import dev.schlaubi.mikbot.plugin.api.util.embed
 import kotlinx.datetime.*
+import org.jetbrains.annotations.PropertyKey
 
 suspend fun checkNotification(allNotifications: List<Notification>): Map<Snowflake, List<UserNotification>> {
     val cache = NotificationCache()
@@ -59,6 +60,20 @@ private val TrainVehicle.Trip.Stop.plannedTime
 
 private val kord by KordExContext.get().inject<Kord>()
 
+@JvmInline
+value class UserContext(val userId: Snowflake)
+
+@Suppress("UNCHECKED_CAST")
+private suspend fun UserContext.translate(
+    @PropertyKey(resourceBundle = "translations.regenbogen_ice.strings") key: String,
+    vararg args: String = arrayOf()
+) = pluginSystem.translate(
+    key,
+    "regenbogen_ice",
+    userLocaleCollection.findOneById(userId)?.locale,
+    args as Array<Any?>
+)
+
 suspend fun buildNotificationMessage(
     userId: Snowflake,
     userNotification: List<UserNotification>
@@ -68,65 +83,69 @@ suspend fun buildNotificationMessage(
     if (userNotification.isEmpty()) {
         return null
     }
-    return userNotification.map { it.trip.firstStopDate }.distinct() to userNotification.groupBy(
-        UserNotification::train
-    ).map { (train, trainNotifications) ->
-        embed {
-            title = pluginSystem.translate(
-                "notification.train_near_you",
-                "regenbogen_ice",
-                userLocaleCollection.findOneById(userId)?.locale,
-                arrayOf(train.displayName)
-            )
-            description = buildString {
-                trainNotifications.groupBy { it.trip }.toList()
-                    .groupBy { it.first.firstStopDate }
-                    .forEach { (date, tripData) ->
-                        append(
-                            date.atStartOfDayIn(TimeZone.UTC).toMessageFormat(
-                                DiscordTimestampStyle.LongDate
-                            )
-                        )
-                        appendLine()
-                        for ((trip, tripNotifications) in tripData.sortedBy { it.first.safeStops.first().actualTime }) {
-                            appendLine()
-                            val nextStop = trip.nextStation
-                            append(trip.linkedDisplayName)
-                            append(' ')
-                            append(Emojis.pushpin)
-                            append(' ')
-                            append(trip.safeStops.last().station)
-                            appendLine()
-                            for (tripNotification in tripNotifications.sortedBy { it.plannedTime }) {
-                                if (nextStop?.station == tripNotification.station) {
-                                    append(Emojis.blueCircle)
-                                } else {
-                                    append(Emojis.redCircle)
-                                }
-                                append(" - ")
-                                append(
-                                    formatTrainTime(
-                                        tripNotification.actualTime,
-                                        tripNotification.plannedTime
-                                    )
+    with(UserContext(user.id)) {
+        return userNotification.map { it.trip.firstStopDate }
+            .distinct() to userNotification.groupBy(
+            UserNotification::train
+        ).map { (train, trainNotifications) ->
+            embed {
+                title = translate("notification.train_near_you", train.displayName)
+                description = buildString {
+                    trainNotifications.groupBy { it.trip }.toList()
+                        .groupBy { it.first.firstStopDate }
+                        .forEach { (date, tripData) ->
+                            append(
+                                date.atStartOfDayIn(TimeZone.UTC).toMessageFormat(
+                                    DiscordTimestampStyle.LongDate
                                 )
-                                append(" **")
-                                append(tripNotification.station.strikethroughIf { tripNotification.actualTime.isPast })
-                                append("** ")
+                            )
+                            appendLine()
+                            for ((trip, tripNotifications) in tripData.sortedBy { it.first.safeStops.first().actualTime }) {
                                 appendLine()
-                            }
-                            if (trip.isActive && tripNotifications.none { it.station == nextStop?.station }) {
+                                val nextStop = trip.nextStation
+                                append(trip.linkedDisplayName)
+                                append(' ')
+                                append(Emojis.pushpin)
+                                append(' ')
+                                append(trip.safeStops.last().station)
                                 appendLine()
-                                append("Nächster Halt: ")
-                                append(formatTrainTime(nextStop?.actualTime, nextStop?.plannedTime))
-                                appendLine()
-                                append("**")
-                                append(nextStop?.station)
-                                append("**")
-                                appendLine()
+                                for (tripNotification in tripNotifications.sortedBy { it.plannedTime }) {
+                                    if (nextStop?.station == tripNotification.station) {
+                                        append(Emojis.blueCircle)
+                                    } else {
+                                        append(Emojis.redCircle)
+                                    }
+                                    append(" - ")
+                                    append(
+                                        formatTrainTime(
+                                            tripNotification.actualTime,
+                                            tripNotification.plannedTime
+                                        )
+                                    )
+                                    append(" **")
+                                    append(tripNotification.station.strikethroughIf { tripNotification.actualTime.isPast })
+                                    append("** ")
+                                    appendLine()
+                                }
+                                if (trip.isActive && tripNotifications.none { it.station == nextStop?.station }) {
+                                    appendLine()
+                                    append(translate("notification.next_stop"))
+                                    append(' ')
+                                    append(
+                                        formatTrainTime(
+                                            nextStop?.actualTime,
+                                            nextStop?.plannedTime
+                                        )
+                                    )
+                                    appendLine()
+                                    append("**")
+                                    append(nextStop?.station)
+                                    append("**")
+                                    appendLine()
+                                }
                             }
                         }
-                    }
+                }
             }
         }
     }

@@ -14,13 +14,24 @@ import dev.schlaubi.mikbot.plugin.api.Plugin
 import dev.schlaubi.mikbot.plugin.api.PluginMain
 import dev.schlaubi.mikbot.plugin.api.PluginWrapper
 import dev.schlaubi.mikbot.plugin.api.util.AllShardsReadyEvent
+import io.ktor.client.*
+import io.ktor.client.engine.okhttp.*
+import io.ktor.client.plugins.*
 import kotlinx.coroutines.cancel
 import org.koin.core.component.inject
 
 @PluginMain
 class RegenbogenICEPlugin(wrapper: PluginWrapper) : Plugin(wrapper) {
 
-    private val rainbowICE = RainbowICE()
+    private val rainbowICE = RainbowICE {
+        httpClient = HttpClient(OkHttp) {
+            install(HttpRequestRetry) {
+                exponentialDelay()
+                maxRetries = 20
+                retryOnServerErrors(3)
+            }
+        }
+    }
     private val marudor = Marudor()
 
     override suspend fun ExtensibleBotBuilder.apply() {

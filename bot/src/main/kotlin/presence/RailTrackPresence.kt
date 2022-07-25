@@ -14,7 +14,9 @@ import dev.schlaubi.mikbot.plugin.api.io.Database
 import dev.schlaubi.mikbot.plugin.api.io.getCollection
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.sync.withPermit
 import org.litote.kmongo.and
 import org.litote.kmongo.eq
 import org.litote.kmongo.`in`
@@ -24,22 +26,23 @@ import kotlin.time.Duration.Companion.seconds
 
 private const val REGENBOGEN_ICE_TZN = "304"
 
-class RailTrackPresence(private val kord: Kord, private val database: Database) : CoroutineScope {
+class RailTrackPresence(private val kord: Kord, database: Database) : CoroutineScope {
     override val coroutineContext: CoroutineContext = Dispatchers.IO + SupervisorJob()
 
-    private val isRunning = Mutex()
+    private val runningMutex = Mutex()
+
+    val isRunning: Boolean
+        get() = runningMutex.isLocked
 
     fun start() = launch {
-        isRunning.withLock {
+        runningMutex.withLock {
             while (isActive) {
                 val (_, trip) = fetchCurrentTrip(REGENBOGEN_ICE_TZN)
                     ?: continue
                 kord.editPresence {
                     watching("${trip.displayName} to ${trip.destinationStation}")
                 }
-                launch {
-                    checkNotifications()
-                }
+                checkNotifications()
                 delay(30.seconds)
             }
         }
@@ -48,38 +51,46 @@ class RailTrackPresence(private val kord: Kord, private val database: Database) 
     private val sentNotifications = database.getCollection<SentNotification>("sent_notifications")
     private suspend fun checkNotifications() =
         sentryTransaction("checkNotifications()", "notifications") {
-            val allNotifications = childTransaction("notifications", "Resolve notifications") {
-                checkNotification(notificationCollection.find().toList())
-            }
-            allNotifications.forEach { (user, notifications) ->
-                childTransaction("notifications", "Resolve notification for user") {
-                    val (days, embeds) = buildNotificationMessage(user, notifications)
-                        ?: return@forEach
-                    val existingNotification =
-                        sentNotifications.findOne(
-                            and(
-                                SentNotification::user eq user,
-                                SentNotification::days `in` days,
-                            )
-                        )
-                    val channel = kord.getUser(user)?.getDmChannelOrNull() ?: return
-                    if (existingNotification != null) {
-                        channel.getMessageOrNull(existingNotification.messageId)?.edit {
-                            this.embeds = embeds.toMutableList()
+            coroutineScope {
+                val allNotifications = childTransaction("notifications", "Resolve notifications") {
+                    checkNotification(notificationCollection.find().toList())
+                }
+                val semaphore = Semaphore(6)
+                allNotifications.forEach { (user, notifications) ->
+                    semaphore.withPermit {
+                        launch {
+                            childTransaction("notifications", "Resolve notification for user") {
+                                val (days, embeds) = buildNotificationMessage(user, notifications)
+                                    ?: return@launch
+                                val existingNotification =
+                                    sentNotifications.findOne(
+                                        and(
+                                            SentNotification::user eq user,
+                                            SentNotification::days `in` days,
+                                        )
+                                    )
+                                val channel = kord.getUser(user)?.getDmChannelOrNull() ?: return@launch
+                                if (existingNotification != null) {
+                                    channel.getMessageOrNull(existingNotification.messageId)?.edit {
+                                        this.embeds = embeds.toMutableList()
+                                    }
+                                    sentNotifications.save(existingNotification.copy(days = days))
+                                } else {
+                                    val message = channel.createMessage {
+                                        this.embeds.addAll(embeds)
+                                    }
+                                    sentNotifications.save(
+                                        SentNotification(
+                                            newId(),
+                                            user,
+                                            message.id,
+                                            message.channelId,
+                                            days
+                                        )
+                                    )
+                                }
+                            }
                         }
-                    } else {
-                        val message = channel.createMessage {
-                            this.embeds.addAll(embeds)
-                        }
-                        sentNotifications.save(
-                            SentNotification(
-                                newId(),
-                                user,
-                                message.id,
-                                message.channelId,
-                                days
-                            )
-                        )
                     }
                 }
             }
