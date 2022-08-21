@@ -24,6 +24,7 @@ dependencies {
     ksp("com.kotlindiscord.kord.extensions", "annotation-processor", "1.5.5.2-MIKBOT-SNAPSHOT")
     implementation(libs.marudor)
     implementation(libs.regenbogen.ice)
+    implementation(libs.ktor.client.logging)
     implementation(projects.rwMutex)
     plugin("dev.schlaubi", "mikbot-health", "1.0.0")
 }
@@ -48,7 +49,7 @@ tasks {
         bundledPlugins.set(listOf("health@1.0.0", "ktor@2.3.0"))
     }
     runBot {
-        environment["DOWNLOAD_PLUGINS"] = "health@1.0.0,ktor@2.3.0"
+        environment["DOWNLOAD_PLUGINS"] = "health,ktor"
     }
 }
 
