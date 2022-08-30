@@ -26,7 +26,7 @@ dependencies {
     implementation(libs.regenbogen.ice)
     implementation(libs.ktor.client.logging)
     implementation(projects.rwMutex)
-    plugin("dev.schlaubi", "mikbot-health", "1.0.0")
+    plugin("dev.schlaubi", "mikbot-health", "1.1.0")
 }
 
 mikbotPlugin {
