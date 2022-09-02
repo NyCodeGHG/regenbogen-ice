@@ -4,12 +4,12 @@ import java.util.*
 plugins {
     `regenbogen-ice-module`
     id("com.google.devtools.ksp") version "1.7.10-1.0.6"
-    id("dev.schlaubi.mikbot.gradle-plugin") version "2.5.0"
+    id("dev.schlaubi.mikbot.gradle-plugin") version "2.6.0"
     idea
 }
 
 group = "dev.nycode"
-version = "0.5.2"
+version = "0.6.0"
 
 repositories {
     mavenCentral()
@@ -19,7 +19,7 @@ repositories {
 
 dependencies {
     compileOnly(kotlin("stdlib-jdk8"))
-    mikbot("dev.schlaubi", "mikbot-api", "3.7.0-SNAPSHOT")
+    mikbot("dev.schlaubi", "mikbot-api", "3.10.0-SNAPSHOT")
     ksp("dev.schlaubi", "mikbot-plugin-processor", "2.3.0")
     ksp("com.kotlindiscord.kord.extensions", "annotation-processor", "1.5.5.2-MIKBOT-SNAPSHOT")
     implementation(libs.marudor)
