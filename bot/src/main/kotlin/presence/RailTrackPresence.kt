@@ -70,25 +70,27 @@ class RailTrackPresence(private val kord: Kord, database: Database) : CoroutineS
                                     SentNotification::days `in` days,
                                 )
                             )
-                        val channel = kord.getUser(user)?.getDmChannelOrNull() ?: return@launch
-                        if (existingNotification != null) {
-                            channel.getMessageOrNull(existingNotification.messageId)?.edit {
-                                this.embeds = embeds.toMutableList()
-                            }
-                            sentNotifications.save(existingNotification.copy(days = days))
-                        } else {
-                            val message = channel.createMessage {
-                                this.embeds.addAll(embeds)
-                            }
-                            sentNotifications.save(
-                                SentNotification(
-                                    newId(),
-                                    user,
-                                    message.id,
-                                    message.channelId,
-                                    days
+                        runCatching {
+                            val channel = kord.getUser(user)?.getDmChannelOrNull() ?: return@launch
+                            if (existingNotification != null) {
+                                channel.getMessageOrNull(existingNotification.messageId)?.edit {
+                                    this.embeds = embeds.toMutableList()
+                                }
+                                sentNotifications.save(existingNotification.copy(days = days))
+                            } else {
+                                val message = channel.createMessage {
+                                    this.embeds.addAll(embeds)
+                                }
+                                sentNotifications.save(
+                                    SentNotification(
+                                        newId(),
+                                        user,
+                                        message.id,
+                                        message.channelId,
+                                        days
+                                    )
                                 )
-                            )
+                            }
                         }
                     }
                 }
