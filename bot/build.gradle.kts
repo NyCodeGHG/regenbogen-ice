@@ -46,7 +46,7 @@ tasks {
         dependsOn(generateDefaultResourceBundle)
     }
     assembleBot {
-        bundledPlugins.set(listOf("health@1.4.0", "ktor@2.7.0"))
+        bundledPlugins.set(listOf("health@1.5.0", "ktor@2.7.0"))
     }
     runBot {
         environment["DOWNLOAD_PLUGINS"] = "health,ktor"
