@@ -11,6 +11,7 @@ import dev.nycode.regenbogenice.commands.displayName
 import dev.nycode.regenbogenice.commands.formatTrainTime
 import dev.nycode.regenbogenice.locale.userLocaleCollection
 import dev.nycode.regenbogenice.train.isObsolete
+import dev.nycode.regenbogenice.util.dataNotice
 import dev.nycode.regenbogenice.util.isFuture
 import dev.nycode.regenbogenice.util.isPast
 import dev.schlaubi.hafalsch.rainbow_ice.entity.TrainVehicle
@@ -145,6 +146,9 @@ suspend fun buildNotificationMessage(
                                 }
                             }
                         }
+                }
+                dataNotice {
+                    translate(it)
                 }
             }
         }

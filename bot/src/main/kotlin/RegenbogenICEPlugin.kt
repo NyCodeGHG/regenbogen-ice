@@ -4,6 +4,7 @@ import com.kotlindiscord.kord.extensions.builders.ExtensibleBotBuilder
 import com.kotlindiscord.kord.extensions.extensions.Extension
 import com.kotlindiscord.kord.extensions.utils.loadModule
 import dev.kord.core.on
+import dev.nycode.regenbogenice.commands.aboutCommand
 import dev.nycode.regenbogenice.commands.currentRideCommand
 import dev.nycode.regenbogenice.notification.notificationCommand
 import dev.nycode.regenbogenice.presence.RailTrackPresence
@@ -69,6 +70,7 @@ class RegenbogenICEExtension : Extension() {
     override suspend fun setup() {
         currentRideCommand()
         notificationCommand()
+        aboutCommand()
         kord.on<AllShardsReadyEvent> {
             presence.start()
         }

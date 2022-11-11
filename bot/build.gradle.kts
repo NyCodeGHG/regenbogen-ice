@@ -4,12 +4,12 @@ import java.util.*
 plugins {
     `regenbogen-ice-module`
     id("com.google.devtools.ksp") version "1.7.10-1.0.6"
-    id("dev.schlaubi.mikbot.gradle-plugin") version "2.6.2"
+    id("dev.schlaubi.mikbot.gradle-plugin") version "2.6.3"
     idea
 }
 
 group = "dev.nycode"
-version = "0.6.3"
+version = "0.6.4"
 
 repositories {
     mavenCentral()
@@ -19,14 +19,14 @@ repositories {
 
 dependencies {
     compileOnly(kotlin("stdlib-jdk8"))
-    mikbot("dev.schlaubi", "mikbot-api", "3.14.0-SNAPSHOT")
+    mikbot("dev.schlaubi", "mikbot-api", "3.15.0-SNAPSHOT")
     ksp("dev.schlaubi", "mikbot-plugin-processor", "2.3.0")
     ksp("com.kotlindiscord.kord.extensions", "annotation-processor", "1.5.5-SNAPSHOT")
     implementation(libs.marudor)
     implementation(libs.regenbogen.ice)
     implementation(libs.ktor.client.logging)
     implementation(projects.rwMutex)
-    plugin("dev.schlaubi", "mikbot-health", "1.4.0")
+    plugin("dev.schlaubi", "mikbot-health", "1.5.0")
 }
 
 mikbotPlugin {
@@ -46,7 +46,7 @@ tasks {
         dependsOn(generateDefaultResourceBundle)
     }
     assembleBot {
-        bundledPlugins.set(listOf("health@1.4.0", "ktor@2.7.0"))
+        bundledPlugins.set(listOf("health@1.5.0", "ktor@2.8.0"))
     }
     runBot {
         environment["DOWNLOAD_PLUGINS"] = "health,ktor"

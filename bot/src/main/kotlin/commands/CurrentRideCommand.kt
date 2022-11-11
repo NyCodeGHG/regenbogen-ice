@@ -16,6 +16,7 @@ import dev.nycode.regenbogenice.locale.updateLocaleAsync
 import dev.nycode.regenbogenice.presence.REGENBOGEN_ICE_TZN
 import dev.nycode.regenbogenice.train.TrainOverride
 import dev.nycode.regenbogenice.train.fetchCurrentTrip
+import dev.nycode.regenbogenice.util.dataNotice
 import dev.schlaubi.hafalsch.marudor.Marudor
 import dev.schlaubi.hafalsch.marudor.entity.JourneyInformation
 import dev.schlaubi.hafalsch.rainbow_ice.entity.TrainVehicle
@@ -144,6 +145,9 @@ context (InteractionResponseModifyBuilder)
                 value = arrival
                 inline = true
             }
+        }
+        dataNotice {
+            translate(it)
         }
     }
 }
