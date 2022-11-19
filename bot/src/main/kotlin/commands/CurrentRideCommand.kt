@@ -59,11 +59,8 @@ suspend fun RegenbogenICEExtension.currentRideCommand() =
             val details = detailsDeferred.await() ?: return@async defaultText
             val id = details.stops[index].station.id
 
-            val url = marudor.hafas.detailsRedirect(details.journeyId)
-            val response = client.get(url)
             val marudorUrl = marudor.buildUrl {
-                takeFrom(response.headers[HttpHeaders.Location]!!)
-                pathSegments = encodedPathSegments // small hack to encode path
+                path("/details/", "${details.train.type} ${details.train.number}", details.departure.scheduledTime.toString())
                 parameters.append("stop", id)
             }
             "[$defaultText]($marudorUrl)"
@@ -86,7 +83,7 @@ suspend fun RegenbogenICEExtension.currentRideCommand() =
                 )
             }
             val details = scope.async {
-                marudor.hafas.details("${currentTrip.trainType} ${currentTrip.trainNumber}")
+                marudor.journeys.details("${currentTrip.trainType} ${currentTrip.trainNumber}")
             }
             val originText =
                 scope.fetchMarudorUrlAsync(stops, details, 0)

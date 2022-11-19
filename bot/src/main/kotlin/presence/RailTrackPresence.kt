@@ -16,10 +16,9 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.sync.withPermit
-import org.litote.kmongo.and
-import org.litote.kmongo.eq
-import org.litote.kmongo.`in`
-import org.litote.kmongo.newId
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import org.litote.kmongo.*
 import kotlin.coroutines.CoroutineContext
 import kotlin.time.Duration.Companion.seconds
 
@@ -42,12 +41,12 @@ class RailTrackPresence(private val kord: Kord, database: Database) : CoroutineS
                     kord.editPresence {
                         watching("${trip.displayName} to ${trip.destinationStation}")
                     }
-                    checkNotifications()
                 } else {
                     kord.editPresence {
                         listening("Einfahrtgeräusche")
                     }
                 }
+                checkNotifications()
                 delay(30.seconds)
             }
         }
@@ -63,13 +62,8 @@ class RailTrackPresence(private val kord: Kord, database: Database) : CoroutineS
                     semaphore.withPermit {
                         val (days, embeds) = buildNotificationMessage(user, notifications)
                             ?: return@launch
-                        val existingNotification =
-                            sentNotifications.findOne(
-                                and(
-                                    SentNotification::user eq user,
-                                    SentNotification::days `in` days,
-                                )
-                            )
+                        val query = """{"${'$'}and": [{"user": ${user.value}}, {"days": {"${'$'}in": ${Json.encodeToString(days)}}}]}""".trimIndent()
+                        val existingNotification = sentNotifications.findOne(query)
                         runCatching {
                             val channel = kord.getUser(user)?.getDmChannelOrNull() ?: return@launch
                             if (existingNotification != null) {
