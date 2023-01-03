@@ -12,5 +12,5 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.assertk)
-    implementation("org.jetbrains.kotlinx", "atomicfu-jvm", "0.18.3")
+    implementation("org.jetbrains.kotlinx", "atomicfu-jvm", "0.19.0")
 }
