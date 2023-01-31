@@ -43,3 +43,4 @@ bin/
 
 ### Mikbot ###
 .test-env
+.env
