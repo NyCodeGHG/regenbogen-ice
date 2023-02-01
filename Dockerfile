@@ -1,9 +1,9 @@
-FROM gradle:7.5-jdk18-alpine as builder
+FROM gradle:7.6-jdk19-alpine as builder
 WORKDIR /usr/app
 COPY . .
 RUN gradle --no-daemon installBotArchive
 
-FROM eclipse-temurin:18-jre-alpine
+FROM eclipse-temurin:19-jre-alpine
 WORKDIR /usr/app
 COPY --from=builder /usr/app/bot/build/installBot .
 
