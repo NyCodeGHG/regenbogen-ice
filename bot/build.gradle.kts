@@ -45,7 +45,7 @@ tasks {
         defaultLocale.set(Locale("en", "GB"))
       }
   assemblePlugin { dependsOn(generateDefaultResourceBundle) }
-  assembleBot { bundledPlugins.set(listOf("health@1.5.0", "ktor@2.8.0")) }
+  assembleBot { bundledPlugins.set(listOf("health@1.5.0", "ktor@2.9.0")) }
   runBot { environment["DOWNLOAD_PLUGINS"] = "health,ktor" }
   withType<KotlinCompile> { kotlinOptions.jvmTarget = "18" }
   withType<Test> { useJUnitPlatform() }
